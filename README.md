@@ -3,6 +3,9 @@
 Learn SystemVerilog by fixing small, broken circuits, one at a time,
 right in your own terminal.
 
+Users are encouraged to fork this repo and pull on their own. If there are
+any contributions, the suggestion may be opened via a PR from an external repo.
+
 If you've used [Rustlings](https://github.com/rust-lang/rustlings)
 before, this is that idea, aimed at hardware description languages
 instead of Rust: every exercise is a tiny SystemVerilog design with one
