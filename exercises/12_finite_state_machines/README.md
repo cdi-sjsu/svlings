@@ -3,9 +3,7 @@
 This is the section everything else in this course has been building
 toward. A **finite state machine** (FSM) is a circuit that's always in
 exactly one of a fixed set of named situations ("states"), and moves
-between them based on its inputs. A traffic light is one: it's always
-either red, green, or yellow, and it moves through those in a fixed
-order.
+between them based on its inputs.
 
 You already have every piece you need:
 
@@ -20,13 +18,13 @@ Putting those together, the standard shape of an FSM is **two** blocks
 working together:
 
 ```systemverilog
-color_e state, state_next;
+state_e state, state_next;
 
 // Block 1: the state register. This is the ONLY place "state" itself
 // ever gets written, and it only changes on a clock edge.
 always_ff @(posedge clk) begin
     if (rst)
-        state <= RED;
+        state <= STATE_A;
     else if (tick)
         state <= state_next;
 end
@@ -35,10 +33,10 @@ end
 // other inputs), decide what state comes next.
 always_comb begin
     case (state)
-        RED:     state_next = GREEN;
-        GREEN:   state_next = YELLOW;
-        YELLOW:  state_next = RED;
-        default: state_next = RED;
+        STATE_A: state_next = STATE_B;
+        STATE_B: state_next = STATE_C;
+        STATE_C: state_next = STATE_A;
+        default: state_next = STATE_A;
     endcase
 end
 ```
@@ -55,12 +53,12 @@ like protocol decoders and simple pattern-matching hardware.
 ## Running the checks
 
 ```
-svlings run traffic_light_fsm
+svlings run two_process_fsm
 svlings verify
 ```
 
 ## Exercises in this section
 
-1. `01_traffic_light_fsm.sv` - the two-block FSM pattern, on the light
-   you designed the transition logic for back in the enums section.
-2. `02_double_one_detector.sv` - a small sequence detector.
+1. `01_two_process_fsm.sv` - the two-block FSM pattern, built around the
+   state transition you designed back in the enums section.
+2. `02_sequence_detector.sv` - a small sequence detector.

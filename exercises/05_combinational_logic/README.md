@@ -50,4 +50,4 @@ svlings verify
 ## Exercises in this section
 
 1. `01_mux2to1.sv` - your first `always_comb` block, a 2-to-1 selector.
-2. `02_seatbelt_chime.sv` - find and fix an accidentally inferred latch.
+2. `02_inferred_latch.sv` - find and fix an accidentally inferred latch.

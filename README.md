@@ -32,6 +32,11 @@ course needs already installed and on your PATH - you don't install
 anything else yourself, and it won't touch anything outside this
 folder. `svlings list` shows you every exercise, in order.
 
+If you have [direnv](https://direnv.net/) set up too, you can skip
+typing `nix develop` every time: this repo ships an `.envrc`, so `direnv
+allow` once inside the folder gets you the same shell automatically,
+every time you `cd` in.
+
 If any of those words - Nix, flakes, terminal, shell - are unfamiliar,
 keep reading; the next two sections are for you.
 
@@ -81,6 +86,14 @@ coming back here.
    automatically every time you save).
 4. Once it passes, move on. Repeat until `svlings verify` tells you
    every exercise passes.
+
+Since `svlings verify` compiles with verilator from scratch every time,
+day-to-day it's fast - it only builds up through wherever you currently
+are. Checking the *entire* course in one go (`svlings verify --all`, or
+just running `svlings verify` again once you've finished everything)
+takes noticeably longer, since it's rebuilding all 28 exercises one
+after another. That's normal; use plain `svlings verify` while you work,
+and save the full run for a final check.
 
 Stuck? Every exercise has a hint:
 

@@ -142,14 +142,22 @@ compile_and_run() {
         die "internal: missing test file for $id (expected $(basename "$test_file"))"
     fi
 
-    local outdir="$BUILD_DIR/$id"
-    # Always start from a clean build directory. Verilator/make's own
+    # Every invocation gets its own fresh, uniquely-named build directory
+    # instead of a shared fixed path. Two reasons: Verilator/make's own
     # staleness checks aren't reliable enough here (files get rewritten
-    # quickly and repeatedly while you're editing), and a stale binary
-    # silently reporting an old result would be far more confusing than
-    # the couple of extra seconds a clean rebuild costs.
-    rm -rf "$outdir"
-    mkdir -p "$outdir"
+    # quickly and repeatedly while you're editing), so we always rebuild
+    # from scratch anyway - and a shared path would race if you had, say,
+    # `svlings watch` running in one terminal while checking the same
+    # exercise with `svlings run` in another. A unique directory per run
+    # means there's never anything to race over.
+    local id_dir="$BUILD_DIR/$id"
+    mkdir -p "$id_dir"
+    local outdir
+    outdir="$(mktemp -d "$id_dir/run.XXXXXX")"
+    # Housekeeping: quietly clear out this exercise's old build directories
+    # from more than an hour ago. The age cutoff means this can never touch
+    # a build that's still plausibly in progress.
+    find "$id_dir" -mindepth 1 -maxdepth 1 -type d -mmin +60 -exec rm -rf {} + 2>/dev/null || true
     local build_log="$outdir/build.log"
     local run_log="$outdir/run.log"
 

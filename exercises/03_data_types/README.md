@@ -30,6 +30,20 @@ equal"). Every testbench in this course already uses `===`/`!==` for
 you, so you don't need to worry about it yet, just recognize it when
 you see it.
 
+## Picking between two values: the ternary operator
+
+The first exercise below asks you to drive an output with one of two
+values depending on a condition. SystemVerilog has a compact way to
+write exactly that, called the **ternary operator**:
+
+```systemverilog
+assign result = condition ? value_if_true : value_if_false;
+```
+
+Read it as "if `condition`, use `value_if_true`, otherwise use
+`value_if_false`." It's just a more compact `if`/`else` for a single
+expression, and you'll see it constantly once you start looking for it.
+
 ## Signed numbers
 
 By default, a `logic [7:0]` vector is just 8 raw bits - there's no
@@ -47,11 +61,11 @@ on the spot with `$signed(...)`, without changing its declaration.
 ## Running the checks
 
 ```
-svlings run bus_driver
+svlings run tristate_driver
 svlings verify
 ```
 
 ## Exercises in this section
 
-1. `01_bus_driver.sv` - driving a shared bus, and letting go of it (Z).
-2. `02_negative_check.sv` - reading a vector as a signed number.
+1. `01_tristate_driver.sv` - driving a shared bus, and letting go of it (Z).
+2. `02_signed_comparison.sv` - reading a vector as a signed number.

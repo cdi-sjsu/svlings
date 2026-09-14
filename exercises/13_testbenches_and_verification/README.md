@@ -21,18 +21,28 @@ An **immediate assertion** lets you state an invariant right where it
 matters, instead of only checking it from the outside in a testbench:
 
 ```systemverilog
-assert (fan_speed <= 2'd2) else $error("fan_speed out of range: %0d", fan_speed);
+assert (band <= 2'd2) else $error("band out of range: %0d", band);
 ```
 
 If the condition is true, nothing happens - simulation continues
 silently. If it's false, the `else` branch runs, which is normally where
-you'd print a `$error` (reports a problem, keeps simulating) or `$fatal`
-(reports a problem, stops simulating immediately - you've seen `$fatal`
-used at the end of every testbench in this course). Sprinkling
-assertions through your own designs, right next to the invariant they're
+you'd print a `$error` (reports a problem) or `$fatal` (reports a
+problem and stops simulation immediately - you've seen `$fatal` used at
+the end of every testbench in this course). Sprinkling assertions
+through your own designs, right next to the invariant they're
 protecting, is one of the highest-value habits in this whole course:
 they catch bugs the moment they happen, not several stages later when
 you're trying to figure out where a wrong value came from.
+
+One quirk worth knowing: an assertion that actually fires stops
+verilator's simulation on the spot (it treats a failed assertion like a
+hard error, not a soft warning), which is exactly what you want in
+practice - but it does mean `svlings` can't grade "did you remember to
+write an assertion" the same mechanical way it grades everything else,
+since an assertion that's never violated by the testbench looks
+identical whether it's there or not. The second exercise below asks you
+to write one anyway, on the honor system - the syntax is worth having in
+your fingers even when nothing's there yet to catch.
 
 ## Going beyond svlings: using verilator directly
 
@@ -77,4 +87,4 @@ svlings verify
 ## Exercises in this section
 
 1. `01_write_a_checker.sv` - fix a broken check against a correct circuit.
-2. `02_temperature_to_fan.sv` - finish a design that includes an assertion.
+2. `02_immediate_assertion.sv` - finish a design, and write an assertion for it.

@@ -19,20 +19,20 @@ the box is private; the rest of your design only ever sees the ports.
 Here's the shape of it in SystemVerilog:
 
 ```systemverilog
-module car_alarm (
-    input  logic door_open,
-    input  logic key_in_ignition,
-    output logic alarm
+module and_not (
+    input  logic a,
+    input  logic b,
+    output logic y
 );
 
-    assign alarm = door_open & ~key_in_ignition;
+    assign y = a & ~b;
 
 endmodule
 ```
 
 A few things worth noticing:
 
-- `module car_alarm ( ... );` opens the box and gives it a name.
+- `module and_not ( ... );` opens the box and gives it a name.
 - Each port gets a direction (`input` or `output`) and a type (`logic`,
   which you'll learn more about soon).
 - `endmodule` closes the box. There's no semicolon after it.
@@ -46,43 +46,43 @@ a light switch. Using a module inside another one is called
 **instantiating** it:
 
 ```systemverilog
-module two_alarms (
-    input  logic door_open,
-    input  logic key_in_ignition,
-    output logic front_alarm,
-    output logic back_alarm
+module two_gates (
+    input  logic a,
+    input  logic b,
+    output logic y1,
+    output logic y2
 );
 
-    car_alarm front (
-        .door_open       (door_open),
-        .key_in_ignition (key_in_ignition),
-        .alarm           (front_alarm)
+    and_not first (
+        .a (a),
+        .b (b),
+        .y (y1)
     );
 
-    car_alarm back (
-        .door_open       (door_open),
-        .key_in_ignition (key_in_ignition),
-        .alarm           (back_alarm)
+    and_not second (
+        .a (b),
+        .b (a),
+        .y (y2)
     );
 
 endmodule
 ```
 
-`car_alarm front ( ... )` creates one copy ("instance") of `car_alarm`
-named `front`, and `.alarm(front_alarm)` says "connect this instance's
-`alarm` port to the wire called `front_alarm` out here." That
-`.port_name(wire_name)` style is called a **named port connection**, and
-you should basically always use it - it's self-documenting, and if the
-module's port order ever changes, your instantiation still works.
+`and_not first ( ... )` creates one copy ("instance") of `and_not` named
+`first`, and `.y(y1)` says "connect this instance's `y` port to the wire
+called `y1` out here." That `.port_name(wire_name)` style is called a
+**named port connection**, and you should basically always use it - it's
+self-documenting, and if the module's port order ever changes, your
+instantiation still works.
 
 ## Running the checks
 
 ```
-svlings run car_alarm
+svlings run missing_port
 svlings verify
 ```
 
 ## Exercises in this section
 
-1. `01_car_alarm.sv` - a module is missing one of its ports.
-2. `02_two_stage_inverter.sv` - wiring up two instances of a module.
+1. `01_missing_port.sv` - a module is missing one of its ports.
+2. `02_chained_instances.sv` - wiring up two instances of a module.

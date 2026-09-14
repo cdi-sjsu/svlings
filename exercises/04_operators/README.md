@@ -68,4 +68,4 @@ svlings verify
 ## Exercises in this section
 
 1. `01_parity_bit.sv` - reduction XOR.
-2. `02_volume_boost.sv` - shifting and the ternary operator together.
+2. `02_shift_left.sv` - shifting and the ternary operator together.

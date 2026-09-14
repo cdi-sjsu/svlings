@@ -5,6 +5,9 @@ obj_dir/
 *.fst
 *.log
 
+# direnv's local cache (the .envrc itself is tracked and just says "use flake")
+.direnv/
+
 # editor/OS noise
 .DS_Store
 *.swp

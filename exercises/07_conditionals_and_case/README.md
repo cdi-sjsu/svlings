@@ -6,19 +6,20 @@ hard to read - that's what `case` is for:
 
 ```systemverilog
 always_comb begin
-    case (day)
-        3'd0, 3'd6: is_weekend = 1'b1;  // Sunday or Saturday
-        default:    is_weekend = 1'b0;
+    case (sel)
+        3'd0, 3'd6: hit = 1'b1;   // matches either value
+        default:    hit = 1'b0;
     endcase
 end
 ```
 
 A `case` statement checks its input against each listed value in order,
 top to bottom, and runs the first branch that matches. You can list
-several values for the same branch separated by commas, like the
-Sunday-or-Saturday line above. `default` catches everything that didn't
-match anything listed - and just like `if`/`else` in a combinational
-block, you almost always want one, so every path assigns a value.
+several values for the same branch separated by commas, like the line
+above matching `3'd0` or `3'd6`. `default` catches everything that
+didn't match anything listed - and just like `if`/`else` in a
+combinational block, you almost always want one, so every path assigns
+a value.
 
 ## Don't-care bits with `casez`
 
@@ -44,11 +45,11 @@ answers "which one, out of possibly several that are active, should win?"
 ## Running the checks
 
 ```
-svlings run day_type
+svlings run grouped_case_items
 svlings verify
 ```
 
 ## Exercises in this section
 
-1. `01_day_type.sv` - a plain `case` statement.
+1. `01_grouped_case_items.sv` - a plain `case` statement.
 2. `02_priority_encoder.sv` - `casez` and don't-care bits.

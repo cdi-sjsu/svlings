@@ -2,40 +2,43 @@
 
 ## Enums: names instead of magic numbers
 
-A traffic light doesn't think of itself as being in "state 2" - it's
-just "green." SystemVerilog lets your code say that too, with `typedef
-enum`:
+Code that tracks "state 2" in its head is harder to read than code that
+just says "green," or "idle," or whatever that state actually means.
+SystemVerilog lets you say that, with `typedef enum`:
 
 ```systemverilog
 typedef enum logic [1:0] {
-    RED,
-    GREEN,
-    YELLOW
-} color_e;
+    STATE_A,
+    STATE_B,
+    STATE_C
+} state_e;
 ```
 
-This creates a new type, `color_e`, whose only legal values are `RED`,
-`GREEN`, and `YELLOW` - which under the hood are just 2-bit numbers (0,
-1, 2), but you never have to think about that. You can now declare
-signals of this type, compare them, and use them in a `case` statement,
-all using the names:
+This creates a new type, `state_e`, whose only legal values are
+`STATE_A`, `STATE_B`, and `STATE_C` - which under the hood are just
+2-bit numbers (0, 1, 2), but you never have to think about that. You can
+now declare signals of this type, compare them, and use them in a `case`
+statement, all using the names:
 
 ```systemverilog
-color_e current, next;
+state_e current, next;
 
 always_comb begin
     case (current)
-        RED:    next = GREEN;
-        GREEN:  next = YELLOW;
-        YELLOW: next = RED;
-        default: next = RED;
+        STATE_A: next = STATE_B;
+        STATE_B: next = STATE_C;
+        STATE_C: next = STATE_A;
+        default: next = STATE_A;
     endcase
 end
 ```
 
-This is far more readable than tracking "0 means red" in your head (or
-in a comment that inevitably goes stale), and it's how you'll represent
-states once you get to finite state machines in a couple of sections.
+This is far more readable than tracking what each number is supposed to
+mean in a comment that inevitably goes stale, and it's how you'll
+represent states once you get to finite state machines in a couple of
+sections. By convention, an enum's type name ends in `_e` (like
+`state_e` above) so it's easy to spot at a glance that it's naming a
+fixed set of values rather than an ordinary number.
 
 ## Structs: grouping related signals
 
@@ -58,16 +61,18 @@ The `packed` keyword means all the fields are laid out contiguously as
 one bit vector under the hood (an 8-bit one, here: 2 + 6), so you can
 still treat the whole struct as a single vector when you need to - for
 example, driving it in one `assign` - while accessing individual pieces
-with the `.field` syntax when that's more convenient.
+with the `.field` syntax when that's more convenient. By the same
+convention as enums, a struct's type name usually ends in `_t` (like
+`instruction_t` above) rather than `_e`.
 
 ## Running the checks
 
 ```
-svlings run next_color
+svlings run enum_case
 svlings verify
 ```
 
 ## Exercises in this section
 
-1. `01_next_color.sv` - an enum and a `case` statement over it.
-2. `02_packet_split.sv` - unpacking fields out of a struct.
+1. `01_enum_case.sv` - an enum and a `case` statement over it.
+2. `02_struct_fields.sv` - unpacking fields out of a struct.
