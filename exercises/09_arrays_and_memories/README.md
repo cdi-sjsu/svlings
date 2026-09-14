@@ -1,5 +1,19 @@
 # Arrays and memories
 
+## By the end of this section you can
+
+- Tell a packed array from an unpacked one, and write each.
+- Index into an array to read one element.
+- Write the standard memory shape: synchronous write, combinational read.
+
+## Warm-up
+
+Answer from memory before reading on:
+
+1. What's the difference between a `for` loop in `always_comb` and a
+   `generate for` loop?
+2. What does `#(.WIDTH(4))` do at an instantiation?
+
 You already know one kind of array without calling it that: a vector
 like `logic [7:0] byte_value` is really an array of 8 individual bits.
 That's called a **packed** array - all its bits are treated as one

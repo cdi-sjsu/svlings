@@ -1,5 +1,20 @@
 # Combinational logic and `always_comb`
 
+## By the end of this section you can
+
+- Write an `always_comb` block using blocking (`=`) assignment.
+- State the rule about assigning every output on every path - and say
+  what goes wrong when you break it.
+- Recognise an inferred latch from what the tool prints at you.
+
+## Warm-up
+
+Answer from memory before reading on:
+
+1. What does `^data` do when `data` is a whole vector and there's
+   nothing on the left of the `^`?
+2. Which of `&` and `&&` would you use to combine two comparisons?
+
 `assign` is great for a single expression, but real logic often needs
 `if`/`else` or multiple steps, and `assign` can't do that on its own.
 For that, SystemVerilog gives you the `always_comb` block:

@@ -32,10 +32,36 @@ end
 keys off of to decide pass/fail - the `SVLINGS: ...` text is there for
 humans reading the output, not for the tool.
 
+## Two kinds of exercise
+
+Sections 00-14 are **guided**: the file has a `TODO` and the comment
+above it says fairly precisely what to write. That's deliberate - it's
+how someone learns syntax without drowning.
+
+Section 15 is **unguided**: a specification comment, an empty module,
+and nothing else. No `TODO`, no half-written block, no naming of which
+operator to use. The hint file for these should describe the *shape* of
+a solution and the reasoning that gets you there, never the code.
+
+If you add exercises, keep that split intact. The fade from one to the
+other is the pedagogical spine of the course, not an accident of how it
+grew.
+
 ## Guidelines
 
 - One concept per exercise. If you're explaining two ideas, it's two
   exercises.
+- Every section README starts with "By the end of this section you can"
+  (what the learner should be able to do) and "Warm-up" (two or three
+  recall questions about *earlier* sections). Both matter: the first is
+  how a learner self-assesses, the second is spaced retrieval, which is
+  the best-evidenced way to make things stick.
+- When an exercise exists to correct a specific misconception, make the
+  testbench *discriminate* it - drive the exact case where the wrong
+  mental model gives a different answer, and name that case in the
+  check message. `15_capstone/03_sequence_101` does this: the classic
+  wrong answer fails on exactly one check, and that check is labelled
+  "overlapping detection."
 - The starting file should fail in exactly one way: either it doesn't
   compile (a real syntax/structure problem to fix) or it compiles and
   produces a wrong answer (a logic bug to fix) - never a mix of several

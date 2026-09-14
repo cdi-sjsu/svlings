@@ -1,5 +1,11 @@
 # Welcome
 
+## By the end of this section you can
+
+- Run the edit → save → check loop that every later section uses.
+- Find the `TODO` in an exercise file and know what it's asking for.
+- Get unstuck with `svlings hint <name>`.
+
 A **module** is the basic building block of a hardware design. Picture a
 small box with wires going into it and wires coming out of it. Inside
 the box, you describe what it does with those wires. That's a module -

@@ -1,5 +1,19 @@
 # Parameters, loops, and generate blocks
 
+## By the end of this section you can
+
+- Give a module a `parameter` and override it when instantiating.
+- Use a procedural `for` loop inside `always_comb`.
+- Use `generate for` with a `genvar` to stamp out repeated hardware.
+- Say what's different between those last two.
+
+## Warm-up
+
+Answer from memory before reading on:
+
+1. What does `default:` protect you from in a combinational `case`?
+2. What does `?` mean in a `casez` pattern?
+
 ## Parameters: modules with a knob on them
 
 A `parameter` lets a module's width (or really, any constant about it) be

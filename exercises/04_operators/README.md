@@ -1,5 +1,18 @@
 # Operators
 
+## By the end of this section you can
+
+- Tell bitwise (`&`) from logical (`&&`) and say when each is correct.
+- Collapse a whole vector to one bit with a reduction operator.
+- Shift a vector, and say what shifting left by one does to its value.
+
+## Warm-up
+
+Answer from memory before reading on:
+
+1. What's the difference between `==` and `===`?
+2. What does `8'bz` mean, and when would a real circuit drive it?
+
 You've already used a handful of operators without a formal introduction.
 Here's the rest of the everyday toolkit.
 

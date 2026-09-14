@@ -1,5 +1,19 @@
 # Enums and structs
 
+## By the end of this section you can
+
+- Define a `typedef enum` and use its names in a `case`.
+- Define a `typedef struct packed` and read its fields with `.field`.
+- Follow the `_e` / `_t` naming convention and say what it signals.
+
+## Warm-up
+
+Answer from memory before reading on:
+
+1. Where do the square brackets go for an unpacked array, and where for
+   a packed one?
+2. Which kind of block do you write a memory's *write* side in?
+
 ## Enums: names instead of magic numbers
 
 Code that tracks "state 2" in its head is harder to read than code that

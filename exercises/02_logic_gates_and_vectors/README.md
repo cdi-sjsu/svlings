@@ -1,5 +1,20 @@
 # Logic gates and vectors
 
+## By the end of this section you can
+
+- Build combinational expressions from `&`, `|`, `~` and `^`.
+- Read and write sized literals like `4'b1010` and `8'hFF`.
+- Slice a range of bits out of a vector, and glue vectors together with `{ }`.
+- Explain why the order of `assign` statements in a file changes nothing.
+
+## Warm-up
+
+Answer from memory before reading on:
+
+1. A signal the module drives for the outside world - is it an `input`
+   or an `output`?
+2. What does `.a(in)` mean when you write it inside an instantiation?
+
 Every digital circuit, no matter how complicated, is ultimately built out
 of a small handful of gates. If you've never seen these before, here's
 the whole list you actually need to start:
@@ -69,3 +84,5 @@ svlings verify
 
 1. `01_half_adder.sv` - your first real circuit: adding two single bits.
 2. `02_nibble_swap.sv` - rearranging an 8-bit vector with concatenation.
+3. `03_signal_order.sv` - why the order of your lines doesn't matter.
+   Read this one before you edit it.

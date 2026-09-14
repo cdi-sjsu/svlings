@@ -1,5 +1,19 @@
 # Functions and tasks
 
+## By the end of this section you can
+
+- Write an `automatic` function that returns a value, and call it from
+  `always_comb`.
+- Write a task that reports more than one result through `output` args.
+- Say when a function is the right tool and when you need a task.
+
+## Warm-up
+
+Answer from memory before reading on:
+
+1. What does a `typedef enum` buy you over just using 0, 1 and 2?
+2. How do you read one field out of a struct?
+
 Once a piece of combinational logic is more than a couple of lines, and
 you find yourself wanting to use it in more than one place, it's worth
 pulling it out into a **function**:

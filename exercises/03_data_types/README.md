@@ -1,5 +1,20 @@
 # Data types
 
+## By the end of this section you can
+
+- Say what X and Z mean, and when you'd expect to see each.
+- Explain why `logic` exists and when 2-state types are the right choice.
+- Pick between two values in one expression with the ternary operator.
+- Read a vector as a signed number with `$signed`.
+
+## Warm-up
+
+Answer from memory before reading on:
+
+1. What does `{upper, lower}` do?
+2. How many bits is `4'd9`, and what is it in binary?
+3. Which gate gives 1 only when its two inputs differ?
+
 So far every wire has quietly been either 0 or 1. Real hardware has two
 more states worth knowing about:
 

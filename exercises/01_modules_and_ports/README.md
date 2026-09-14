@@ -1,5 +1,18 @@
 # Modules and ports
 
+## By the end of this section you can
+
+- Declare a module with correctly-directioned `input` and `output` ports.
+- Explain what a port is, and why nothing else gets in or out of a module.
+- Instantiate one module inside another with named port connections.
+
+## Warm-up
+
+Answer from memory before reading on:
+
+1. What does putting `//` at the start of a line do?
+2. When `svlings verify` stops, what are the two things it tells you?
+
 A **module** is the basic building block of a hardware design. You already
 met one in the welcome exercise. Think of a module as a labeled box:
 

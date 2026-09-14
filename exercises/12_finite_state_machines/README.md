@@ -1,5 +1,21 @@
 # Finite state machines
 
+## By the end of this section you can
+
+- Work out what states a problem actually needs.
+- Implement the two-block FSM pattern: a state register plus
+  combinational next-state logic.
+- Derive an output from the current state.
+
+## Warm-up
+
+This section combines three things you've already built. Answer from
+memory before reading on:
+
+1. (§06) Which block type holds a value across clock edges?
+2. (§10) How do you give a set of states readable names?
+3. (§07) Which statement picks one branch out of many based on a value?
+
 This is the section everything else in this course has been building
 toward. A **finite state machine** (FSM) is a circuit that's always in
 exactly one of a fixed set of named situations ("states"), and moves

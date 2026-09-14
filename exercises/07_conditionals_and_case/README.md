@@ -1,5 +1,19 @@
 # Conditionals and `case`
 
+## By the end of this section you can
+
+- Write a `case` with grouped items and a `default`.
+- Use `casez` with `?` to ignore bits you don't care about.
+- Explain how first-match-wins ordering turns a `casez` into a priority
+  encoder.
+
+## Warm-up
+
+Answer from memory before reading on:
+
+1. In `always_ff`, which assignment operator do you use?
+2. What does a synchronous reset do that an ordinary input doesn't?
+
 You've already used `if`/`else` chains quite a bit. Once you're choosing
 between more than two or three options, a chain of `if`/`else if` gets
 hard to read - that's what `case` is for:

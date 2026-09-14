@@ -1,5 +1,20 @@
 # Interfaces, and what's next
 
+## By the end of this section you can
+
+- Declare an `interface` that bundles related signals.
+- Use a `modport` to say which direction each side drives.
+- Connect two modules through one shared interface instance.
+
+## Warm-up
+
+Answer from memory before reading on:
+
+1. (§01) Write the named-port-connection syntax for hooking a module's
+   `data` port up to a wire called `bus_data`.
+2. (§13) Why does every testbench in this course end in either `$finish`
+   or `$fatal`?
+
 ## Interfaces: bundling signals that travel together
 
 Back in the modules section, connecting two modules meant listing every

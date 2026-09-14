@@ -91,7 +91,7 @@ Since `svlings verify` compiles with verilator from scratch every time,
 day-to-day it's fast - it only builds up through wherever you currently
 are. Checking the *entire* course in one go (`svlings verify --all`, or
 just running `svlings verify` again once you've finished everything)
-takes noticeably longer, since it's rebuilding all 28 exercises one
+takes noticeably longer, since it's rebuilding all 32 exercises one
 after another. That's normal; use plain `svlings verify` while you work,
 and save the full run for a final check.
 
@@ -124,7 +124,24 @@ flake.nix     - the nix development shell: every tool, pinned and reproducible
 Sections are numbered and meant to be done in order - each one leans on
 ideas from the ones before it. Inside a section, you'll find a
 `README.md` explaining the concept in plain language before you touch
-any code, plus (usually) two small exercises putting it into practice.
+any code, plus two or three small exercises putting it into practice.
+
+Each section README opens with two things worth not skipping. **By the
+end of this section you can** is the list of what you're actually meant
+to walk away able to do - check yourself against it before moving on,
+because passing the exercises and understanding them aren't guaranteed
+to be the same thing. **Warm-up** is two or three questions about
+*earlier* sections. Answer them from memory, out loud or on paper,
+before reading the new material. This feels pointless and is not:
+pulling something back out of your head is what makes it stick, far
+more than re-reading it would.
+
+The support fades on purpose. Through section 14, every exercise hands
+you a file with a `TODO` and tells you fairly precisely what to write -
+that's how you learn syntax without drowning. Section 15 takes it all
+away: a specification, an empty module, and nothing else. That gap is
+where "I can read SystemVerilog" turns into "I can write it," and it's
+the part you can't skip.
 
 The current lineup (Phase 1 - the language itself):
 
@@ -145,6 +162,7 @@ The current lineup (Phase 1 - the language itself):
 | 12 | finite_state_machines | putting it all together: real FSMs |
 | 13 | testbenches_and_verification | writing your own checks and assertions |
 | 14 | interfaces_and_whats_next | bundling signals, and where to go next |
+| 15 | capstone | no TODOs - a spec, an empty module, and you |
 
 ## Verifying your work, the tools behind the scenes
 

@@ -1,5 +1,20 @@
 # Writing your own checks
 
+## By the end of this section you can
+
+- Drive inputs and check outputs from an `initial` block.
+- Print values with `$display` and the right format specifier.
+- Write an immediate `assert` that states an invariant.
+- Drive verilator yourself, without going through `svlings`.
+
+## Warm-up
+
+Answer from memory before reading on:
+
+1. In an FSM, what lives in the `always_ff` block and what lives in the
+   `always_comb` block?
+2. What does `$fatal` do that `$display` doesn't?
+
 Every exercise so far has come with a testbench already written for you.
 This section is about writing your own - because in real work, nobody
 hands you one. You write the circuit, and then you write something that
