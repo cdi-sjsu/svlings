@@ -1,0 +1,400 @@
+#!/usr/bin/env bash
+# svlings - the little command line tool that runs this course.
+#
+# You are not expected to read this file to do the exercises. It's just the
+# plumbing: it finds your exercises, hands them to verilator, and turns the
+# result into a plain "yes that works" or "no, here's why" message.
+#
+# If you're curious how it works, it's just a bash script - open it in an
+# editor like any other file and read it top to bottom.
+
+set -u
+set -o pipefail
+
+# ---------------------------------------------------------------------------
+# Setup: figure out where the course lives, regardless of where you ran this
+# command from.
+# ---------------------------------------------------------------------------
+
+SCRIPT_PATH="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+ROOT_DIR="$(cd -- "$SCRIPT_PATH/.." >/dev/null 2>&1 && pwd)"
+EXERCISES_DIR="$ROOT_DIR/exercises"
+SOLUTIONS_DIR="$ROOT_DIR/solutions"
+BUILD_DIR="$ROOT_DIR/.svlings-build"
+
+# Colors, but only if we're printing to a real terminal. Scripts piping our
+# output somewhere else shouldn't get escape codes in their logs.
+if [[ -t 1 ]]; then
+    C_RED=$'\033[31m'; C_GREEN=$'\033[32m'; C_YELLOW=$'\033[33m'
+    C_BLUE=$'\033[34m'; C_BOLD=$'\033[1m'; C_RESET=$'\033[0m'
+else
+    C_RED=""; C_GREEN=""; C_YELLOW=""; C_BLUE=""; C_BOLD=""; C_RESET=""
+fi
+
+die() { echo "${C_RED}error:${C_RESET} $*" >&2; exit 1; }
+
+need_tool() {
+    command -v "$1" >/dev/null 2>&1 || die "'$1' isn't on your PATH. Did you run 'nix develop'? See the top-level README."
+}
+
+# ---------------------------------------------------------------------------
+# Exercise discovery.
+#
+# Every exercise is a pair of files that live side by side in a numbered
+# section folder:
+#
+#   exercises/02_logic_gates/01_xor_gate.sv        <- you edit this one
+#   exercises/02_logic_gates/01_xor_gate_test.sv   <- checks your work
+#
+# We walk the exercises/ folder, find every *.sv file that ISN'T a _test.sv
+# file, and treat that as one exercise. Sorting the paths gives us the
+# intended course order for free, because every section and exercise is
+# numbered (00_, 01_, 02_, ...).
+# ---------------------------------------------------------------------------
+
+list_exercise_files() {
+    find "$EXERCISES_DIR" -mindepth 2 -maxdepth 2 -type f -name '*.sv' \
+        ! -name '*_test.sv' | LC_ALL=C sort
+}
+
+# Given a full path to an exercise .sv file, print its "id": the section
+# folder name and the exercise file name, without extensions, joined by "/".
+# e.g. exercises/02_logic_gates/01_xor_gate.sv -> 02_logic_gates/01_xor_gate
+exercise_id_for() {
+    local file="$1"
+    local section base
+    section="$(basename "$(dirname "$file")")"
+    base="$(basename "$file" .sv)"
+    echo "$section/$base"
+}
+
+# Human-friendly title for an id, e.g. "02_logic_gates/01_xor_gate" becomes
+# "logic_gates / xor_gate". We just strip the leading NN_ numbering.
+pretty_id() {
+    local id="$1"
+    local section base
+    section="${id%%/*}"
+    base="${id#*/}"
+    section="${section#[0-9][0-9]_}"
+    base="${base#[0-9][0-9]_}"
+    echo "$section / $base"
+}
+
+exercise_paths_for_id() {
+    # Resolves a user-typed id (which may be partial, e.g. "xor_gate" or
+    # "02_logic_gates/01_xor_gate" or "logic_gates/xor_gate") to one exercise
+    # file. Errors out (with suggestions) if it's ambiguous or missing.
+    local want="$1"
+    local -a matches=()
+    local f id
+
+    while IFS= read -r f; do
+        id="$(exercise_id_for "$f")"
+        if [[ "$id" == "$want" ]]; then
+            echo "$f"
+            return 0
+        fi
+        matches_it=0
+        [[ "$id" == *"$want"* ]] && matches_it=1
+        [[ "$(pretty_id "$id")" == *"$want"* ]] && matches_it=1
+        if [[ "$matches_it" == 1 ]]; then
+            matches+=("$f")
+        fi
+    done < <(list_exercise_files)
+
+    if [[ "${#matches[@]}" -eq 1 ]]; then
+        echo "${matches[0]}"
+        return 0
+    elif [[ "${#matches[@]}" -eq 0 ]]; then
+        die "no exercise matches '$want'. Try 'svlings list' to see valid names."
+    else
+        echo "${C_YELLOW}'$want' is ambiguous, it matches:${C_RESET}" >&2
+        local m
+        for m in "${matches[@]}"; do
+            echo "  - $(pretty_id "$(exercise_id_for "$m")")" >&2
+        done
+        exit 1
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Compiling and running one exercise with verilator.
+# ---------------------------------------------------------------------------
+
+# Filters out Verilator's own banner/report noise so students see their
+# program's output, not our tooling's bookkeeping.
+quiet_verilator_output() {
+    grep -Ev '^- (V e r i l a t i o n|Verilator:)|^- .*: Verilog \$(finish|stop)$'
+}
+
+# compile_and_run <exercise.sv path>
+# Sets: RESULT_PASSED (0/1), RESULT_LOG (path to captured run output),
+#       RESULT_BUILD_LOG (path to captured build output), RESULT_BUILD_OK (0/1)
+compile_and_run() {
+    local exfile="$1"
+    local id section base test_file
+    id="$(exercise_id_for "$exfile")"
+    section="$(dirname "$exfile")"
+    base="$(basename "$exfile" .sv)"
+    test_file="$section/${base}_test.sv"
+
+    if [[ ! -f "$test_file" ]]; then
+        die "internal: missing test file for $id (expected $(basename "$test_file"))"
+    fi
+
+    local outdir="$BUILD_DIR/$id"
+    # Always start from a clean build directory. Verilator/make's own
+    # staleness checks aren't reliable enough here (files get rewritten
+    # quickly and repeatedly while you're editing), and a stale binary
+    # silently reporting an old result would be far more confusing than
+    # the couple of extra seconds a clean rebuild costs.
+    rm -rf "$outdir"
+    mkdir -p "$outdir"
+    local build_log="$outdir/build.log"
+    local run_log="$outdir/run.log"
+
+    if ! verilator --binary -sv --timing -Wall -Wno-DECLFILENAME -Wno-UNUSEDSIGNAL \
+        --top-module tb -Mdir "$outdir/obj_dir" -o sim \
+        "$exfile" "$test_file" >"$build_log" 2>&1
+    then
+        RESULT_BUILD_OK=1
+        RESULT_PASSED=1
+        RESULT_LOG="$build_log"
+        return 1
+    fi
+    RESULT_BUILD_OK=0
+
+    if "$outdir/obj_dir/sim" >"$run_log" 2>&1; then
+        RESULT_PASSED=0
+    else
+        RESULT_PASSED=1
+    fi
+    RESULT_LOG="$run_log"
+    return 0
+}
+
+# ---------------------------------------------------------------------------
+# Commands
+# ---------------------------------------------------------------------------
+
+cmd_list() {
+    echo "${C_BOLD}svlings course contents${C_RESET}"
+    echo "(run 'svlings verify' to actually check your work)"
+    echo
+    local last_section=""
+    local f id section_raw section base
+    while IFS= read -r f; do
+        id="$(exercise_id_for "$f")"
+        section_raw="${id%%/*}"
+        base="${id#*/}"
+        if [[ "$section_raw" != "$last_section" ]]; then
+            section="${section_raw#[0-9][0-9]_}"
+            echo "${C_BLUE}${section_raw}${C_RESET}"
+            last_section="$section_raw"
+        fi
+        echo "  ${base}"
+    done < <(list_exercise_files)
+    echo
+    echo "Run one exercise:   svlings run <name>"
+    echo "Check your work:    svlings verify"
+    echo "Stuck?              svlings hint <name>"
+}
+
+print_fail_box() {
+    local id="$1" reason="$2"
+    echo
+    echo "${C_RED}${C_BOLD}✗ ${id}${C_RESET} ${reason}"
+    echo
+    echo "  What to do next:"
+    echo "    1. Open the file:      exercises/${id}.sv"
+    echo "    2. Read the comment at the top - it explains the concept."
+    echo "    3. Look for a line marked TODO and fill it in."
+    echo "    4. Save, then run:     svlings verify"
+    echo
+    echo "  Stuck? Run:              svlings hint ${id#*/}"
+    echo
+}
+
+cmd_verify() {
+    need_tool verilator
+    local run_all=0
+    [[ "${1:-}" == "--all" ]] && run_all=1
+
+    local total=0 passed=0
+    local f id
+    while IFS= read -r f; do
+        id="$(exercise_id_for "$f")"
+        total=$((total + 1))
+        compile_and_run "$f"
+        if [[ "$RESULT_BUILD_OK" -ne 0 ]]; then
+            echo "${C_RED}✗${C_RESET} ${id}  (does not compile)"
+            if [[ "$run_all" -eq 0 ]]; then
+                echo
+                echo "${C_BOLD}Verilator couldn't build this one:${C_RESET}"
+                echo
+                quiet_verilator_output <"$RESULT_LOG" | sed 's/^/  /'
+                print_fail_box "$id" "does not compile yet."
+                return 1
+            fi
+            continue
+        fi
+        if [[ "$RESULT_PASSED" -eq 0 ]]; then
+            echo "${C_GREEN}✓${C_RESET} ${id}"
+            passed=$((passed + 1))
+        else
+            echo "${C_RED}✗${C_RESET} ${id}  (compiles, but checks fail)"
+            if [[ "$run_all" -eq 0 ]]; then
+                echo
+                echo "${C_BOLD}Here's what the testbench saw:${C_RESET}"
+                echo
+                quiet_verilator_output <"$RESULT_LOG" | sed 's/^/  /'
+                print_fail_box "$id" "compiles, but isn't correct yet."
+                return 1
+            fi
+        fi
+    done < <(list_exercise_files)
+
+    echo
+    if [[ "$passed" -eq "$total" ]]; then
+        echo "${C_GREEN}${C_BOLD}All $total exercises pass. Nicely done.${C_RESET}"
+        echo "That's Phase 1 of svlings - you now know enough SystemVerilog to"
+        echo "read real RTL and start writing your own small designs."
+    else
+        echo "${C_BOLD}${passed}/${total}${C_RESET} exercises pass."
+    fi
+}
+
+cmd_run() {
+    local want="${1:-}"
+    [[ -z "$want" ]] && die "usage: svlings run <name>"
+    need_tool verilator
+    local f id
+    f="$(exercise_paths_for_id "$want")" || exit 1
+    id="$(exercise_id_for "$f")"
+    echo "Building and running ${C_BOLD}${id}${C_RESET} ..."
+    compile_and_run "$f"
+    if [[ "$RESULT_BUILD_OK" -ne 0 ]]; then
+        echo
+        quiet_verilator_output <"$RESULT_LOG" | sed 's/^/  /'
+        print_fail_box "$id" "does not compile yet."
+        return 1
+    fi
+    echo
+    quiet_verilator_output <"$RESULT_LOG" | sed 's/^/  /'
+    echo
+    if [[ "$RESULT_PASSED" -eq 0 ]]; then
+        echo "${C_GREEN}${C_BOLD}✓ passed${C_RESET}"
+    else
+        print_fail_box "$id" "compiles, but isn't correct yet."
+        return 1
+    fi
+}
+
+cmd_watch() {
+    need_tool verilator
+    echo "Watching exercises/ for changes. Press Ctrl-C to stop."
+    echo
+    local last_hash="" cur_hash
+    while true; do
+        cur_hash="$(find "$EXERCISES_DIR" -type f -name '*.sv' -exec sha256sum {} + 2>/dev/null | LC_ALL=C sort | sha256sum)"
+        if [[ "$cur_hash" != "$last_hash" ]]; then
+            last_hash="$cur_hash"
+            clear 2>/dev/null || true
+            cmd_verify
+            echo
+            echo "(watching for changes...)"
+        fi
+        sleep 1
+    done
+}
+
+cmd_hint() {
+    local want="${1:-}"
+    [[ -z "$want" ]] && die "usage: svlings hint <name>"
+    local f id hint_file
+    f="$(exercise_paths_for_id "$want")" || exit 1
+    id="$(exercise_id_for "$f")"
+    hint_file="$(dirname "$f")/$(basename "$f" .sv).hint.md"
+    echo "${C_BOLD}Hint for ${id}${C_RESET}"
+    echo
+    if [[ -f "$hint_file" ]]; then
+        cat "$hint_file"
+    else
+        echo "(no hint file found - re-read the comments in the exercise file)"
+    fi
+}
+
+cmd_solution() {
+    local want="${1:-}"
+    [[ -z "$want" ]] && die "usage: svlings solution <name>"
+    local f id sol_file rel
+    f="$(exercise_paths_for_id "$want")" || exit 1
+    id="$(exercise_id_for "$f")"
+    rel="${f#"$EXERCISES_DIR"/}"
+    sol_file="$SOLUTIONS_DIR/$rel"
+    echo "${C_YELLOW}This is the full answer. It's fine to look, everyone gets stuck.${C_RESET}"
+    echo "${C_YELLOW}But you'll learn more if you spend a few more minutes first.${C_RESET}"
+    echo
+    if [[ -f "$sol_file" ]]; then
+        cat "$sol_file"
+    else
+        die "no solution file found at $sol_file"
+    fi
+}
+
+cmd_reset() {
+    local want="${1:-}"
+    [[ -z "$want" ]] && die "usage: svlings reset <name>"
+    local f id
+    f="$(exercise_paths_for_id "$want")" || exit 1
+    id="$(exercise_id_for "$f")"
+    if ! git -C "$ROOT_DIR" rev-parse >/dev/null 2>&1; then
+        die "this isn't a git repository, so there's nothing to reset from. (Did you run 'git init'?)"
+    fi
+    git -C "$ROOT_DIR" checkout -- "$f" \
+        && echo "${C_GREEN}reset${C_RESET} ${id} back to its starting point." \
+        || die "couldn't reset $id - is it tracked by git yet? Try 'git add' then commit once before resetting."
+}
+
+cmd_help() {
+    cat <<EOF
+${C_BOLD}svlings${C_RESET} - a hands-on SystemVerilog course
+
+usage: svlings <command> [name]
+
+commands:
+  list                 show every exercise, grouped by section
+  verify               check exercises in order, stop at the first failure
+  verify --all         check every exercise, don't stop early
+  run <name>           build and run one exercise, showing full output
+  watch                keep checking automatically as you save files
+  hint <name>           print a hint for one exercise
+  solution <name>      print the full reference solution (spoilers!)
+  reset <name>         throw away your edits and restore the starting file
+  help                 show this message
+
+"<name>" can be the exercise's short name (e.g. "xor_gate"), and doesn't
+need the section number or folder in front of it, as long as it's unique.
+EOF
+}
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+mkdir -p "$BUILD_DIR"
+
+cmd="${1:-list}"
+[[ $# -gt 0 ]] && shift
+
+case "$cmd" in
+    list) cmd_list "$@" ;;
+    verify) cmd_verify "$@" ;;
+    run) cmd_run "$@" ;;
+    watch) cmd_watch "$@" ;;
+    hint) cmd_hint "$@" ;;
+    solution) cmd_solution "$@" ;;
+    reset) cmd_reset "$@" ;;
+    help|-h|--help) cmd_help ;;
+    *) echo "${C_RED}unknown command:${C_RESET} $cmd"; echo; cmd_help; exit 1 ;;
+esac

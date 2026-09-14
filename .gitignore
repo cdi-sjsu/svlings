@@ -1,0 +1,14 @@
+# build output from svlings / verilator
+.svlings-build/
+obj_dir/
+*.vcd
+*.fst
+*.log
+
+# editor/OS noise
+.DS_Store
+*.swp
+
+# local Claude Code session state, not part of the course
+.claude/
+
